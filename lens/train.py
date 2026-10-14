@@ -17,14 +17,17 @@ from lens.model import build_model
 
 def main():
     parser = argparse.ArgumentParser(description='Train a reproducible CIFAR Lens experiment')
-    parser.add_argument('--architecture', choices=['baseline', 'residual'], default='residual')
+    parser.add_argument('--architecture', choices=['baseline', 'residual', 'resnet20'], default='residual')
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch-size', type=int, default=128)
     parser.add_argument('--seed', type=int, default=73)
     parser.add_argument('--limit', type=int, default=0, help='Training samples for smoke tests; 0 uses all')
     parser.add_argument('--output', type=Path, default=Path('artifacts/residual'))
     parser.add_argument('--resume', action='store_true', help='Continue a checkpoint in the output folder')
+    parser.add_argument('--target-accuracy', type=float, default=0.91, help='Recorded goal, never used to alter test results')
     args = parser.parse_args()
+    if not 0 < args.target_accuracy <= 1:
+        parser.error('Target accuracy must be in (0, 1]')
     if args.epochs < 1 or args.batch_size < 1 or args.limit < 0 or (args.limit and args.limit < 100):
         parser.error('Positive epochs and batch size required; limit must be 0 or >=100')
     if args.output.exists() and any(args.output.iterdir()) and not args.resume:
@@ -97,6 +100,16 @@ def main():
             previous_rows = list(csv.DictReader(f))
         if previous_rows:
             callbacks[0].best = min(float(row['val_loss']) for row in previous_rows)
+    if args.architecture == 'resnet20':
+        # Long SGD schedule: do not stop before the later low-rate refinement.
+        def schedule(epoch, current_lr):
+            if epoch < 5:
+                return 0.1 * (epoch + 1) / 5
+            phase = min(1., (epoch - 5) / max(1, args.epochs - 5))
+            return float(0.0001 + 0.5 * (0.1 - 0.0001) * (1 + np.cos(np.pi * phase)))
+        callbacks = [callback for callback in callbacks if not isinstance(callback,
+                     (tf.keras.callbacks.EarlyStopping, tf.keras.callbacks.ReduceLROnPlateau))]
+        callbacks.append(tf.keras.callbacks.LearningRateScheduler(schedule))
     model.fit(batches(x[ti], y[ti], training=True), validation_data=batches(x[vi], y[vi]),
               epochs=args.epochs, initial_epoch=initial_epoch, callbacks=callbacks, verbose=2)
     # Always evaluate the best validation-loss checkpoint, including an older
@@ -130,6 +143,7 @@ def main():
     payload = {'schema_version': 1, 'architecture': args.architecture, 'seed': args.seed,
                'smoke_run': bool(args.limit), 'training_samples': len(ti), 'validation_samples': len(vi),
                'test_samples': len(yt), 'temperature': temperature, 'accuracy': report['accuracy'],
+               'target_accuracy': args.target_accuracy, 'target_met': report['accuracy'] >= args.target_accuracy,
                'macro_f1': report['macro avg']['f1-score'], 'ece': ece, 'raw_ece': raw_ece,
                'reliability': reliability, 'classification_report': report,
                'confusion_matrix': confusion_matrix(yt, predictions, labels=range(10)).tolist(),
