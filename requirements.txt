@@ -1,0 +1,8 @@
+tensorflow==2.19.0
+keras==3.10.0
+streamlit>=1.45,<2
+numpy>=1.26,<2.2
+scikit-learn>=1.6,<2
+matplotlib>=3.9,<4
+Pillow>=11,<13
+pytest>=8,<10
