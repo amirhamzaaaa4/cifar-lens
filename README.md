@@ -1,5 +1,7 @@
 # ◉ CIFAR Lens
 
+**[Open the live browser demo ↗](https://huggingface.co/spaces/AMIRHAMZAAAA4/cifar-lens)** · [Download the trained model](https://github.com/amirhamzaaaa4/cifar-lens/releases/tag/v1.0.0)
+
 ![CIFAR Lens computer vision lab](evidence/banner.svg)
 
 [![Tests](https://github.com/amirhamzaaaa4/cifar-lens/actions/workflows/tests.yml/badge.svg)](https://github.com/amirhamzaaaa4/cifar-lens/actions/workflows/tests.yml)
@@ -11,9 +13,11 @@ An interactive computer-vision lab for CIFAR-10. Upload a photo and see all ten 
 
 **TensorFlow / Keras · Streamlit · Grad-CAM · calibration · reproducible experiments**
 
-The live demo awaits a completed trained-model release. Current target: **91% held-out test accuracy**.
+**Measured test accuracy: 93.51%** on 10,000 held-out CIFAR-10 images. The 95% bootstrap interval is 93.03%–93.98%. The live demo runs the verified model directly in your browser; uploaded photos stay on your device.
 
-<!-- Add a short GIF here: upload → prediction → Grad-CAM → error explorer -->
+![Live CIFAR Lens demo: prediction, Grad-CAM, errors and evaluation](evidence/trained/demo.gif)
+
+![Measured training and class recall](evidence/trained/training-and-class-recall.png)
 
 ## Results
 
@@ -22,13 +26,11 @@ All new models are trained on 45,000 images, selected on a separate 5,000-image 
 | Model | Test accuracy (95% CI) | Macro F1 | Calibration error (ECE) | Parameters |
 |---|---:|---:|---:|---:|
 | Original group notebook (2025) | 85.07%\* | 0.849 | — | — |
-| Baseline CNN | _run pending_ | | | |
-| Residual CNN | _run pending_ | | | |
-| ResNet20 + Cutout + label smoothing + flip TTA | _run pending_ | | | ≈0.27 M |
+| ResNet20 + Cutout + label smoothing + flip TTA | 93.51% (93.03%–93.98%) | 0.9350 | 0.0141 | 274,042 |
 
 \* The original notebook also used the test set for validation, so its score is optimistic and not directly comparable.
 
-Fill this table from `python -m lens.compare …` (see below). It writes `evidence/benchmark/comparison.csv` and an accuracy chart.
+The completed ResNet20 run used all 180 planned epochs and has `smoke_run: false`. [Full evaluation record](evidence/trained/results.json). Separate reference experiments and additional seeds can be compared with `lens.compare`.
 
 ## What makes it different
 
@@ -80,11 +82,13 @@ python -m lens.compare artifacts/baseline artifacts/residual artifacts/resnet20-
 python -m pytest -q
 ```
 
-Each run writes `model.keras`, `results.json`, `epochs.csv`, `errors.npz` and sample images to its own folder. Folders must be empty to prevent overwrites. Weights stay out of Git: publish an experiment folder as a zip in a GitHub Release.
+Each run writes `model.keras`, `results.json`, `epochs.csv`, `errors.npz` and sample images to its own folder. Folders must be empty to prevent overwrites. Python model weights and checkpoints are distributed through GitHub Releases. The compact browser weights are included in `web/` with a verified checksum.
 
 ## Deploy
 
-Hugging Face Spaces (Docker) or any container host: build the included `Dockerfile` and set `LENS_EXPERIMENT_URL` to your release zip. The app downloads it on startup and verifies the model checksum. See [hosting notes](docs/HOSTING.md).
+The public demo is a free [Hugging Face static Space](https://huggingface.co/spaces/AMIRHAMZAAAA4/cifar-lens). The `web/` folder contains its complete source and 1.1 MB of model weights. Uploaded images are centre-cropped, resized to 32×32 and normalized; browser canvas resizing can differ slightly from Python bicubic for photos. Identical CIFAR-10 pixels were checked against Python: **30/30 class matches**, maximum calibrated-score difference **2.38 × 10⁻⁷**. The app checks this comparison and the weights checksum on startup. Grad-CAM uses the exact formula for the model’s global-average-pooling and linear head. [Verification screenshot](evidence/trained/browser-parity.jpg).
+
+For the full Python Streamlit app, Hugging Face Spaces (Docker) or any container host: build the included `Dockerfile` and set `LENS_EXPERIMENT_URL` to your release zip. The app downloads it on startup and verifies the model checksum. See [hosting notes](docs/HOSTING.md).
 
 ## Project structure
 
