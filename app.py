@@ -26,10 +26,19 @@ def load_model(path, modified):
 
 
 historical = json.loads((ROOT / 'evidence/original_results.json').read_text())
-folders = sorted(p.parent for p in (ROOT / 'artifacts').glob('*/results.json'))
+folders = sorted((p.parent for p in (ROOT / 'artifacts').glob('*/results.json')),
+                 key=lambda p: ('smoke' in p.name, p.name))
 with st.sidebar:
     st.markdown('### ◉ CIFAR Lens')
     st.caption('Ten classes. One transparent experiment.')
+    for progress_path in sorted((ROOT / 'artifacts').glob('*/progress.json')):
+        if not (progress_path.parent / 'results.json').exists():
+            try:
+                progress = json.loads(progress_path.read_text())
+                st.caption(f"Training {progress_path.parent.name}: epoch {progress['epoch']} / {progress['epoch_budget']}")
+                st.progress(progress['epoch'] / progress['epoch_budget'])
+            except (OSError, json.JSONDecodeError):
+                pass
     selected = st.selectbox('Experiment', folders, format_func=lambda p: p.name, key='experiment') if folders else None
     threshold = st.slider('Review threshold', 0.1, 0.99, 0.65, 0.01)
     st.caption('Scores below this threshold receive a review flag. High scores do not guarantee correctness.')
@@ -52,15 +61,18 @@ with predict:
         st.write('Upload one object from the ten CIFAR-10 classes. The model sees a 32 × 32 version.')
         upload = st.file_uploader('JPEG or PNG · up to 8 MB', type=['jpg', 'jpeg', 'png'])
         st.caption('Images stay in this app session and are not saved by the application.')
+        samples = sorted((selected / 'samples').glob('*.png')) if selected else []
+        example = st.selectbox('Or try a real CIFAR-10 example', [None] + samples,
+                    format_func=lambda p: 'Choose an example' if p is None else p.stem.replace('_', ' ')) if samples else None
     with right:
         if selected is None:
             st.info('Train an experiment to unlock real predictions and Grad-CAM. No predictions are simulated.')
             st.code('python -m lens.train --output artifacts/residual')
-        elif upload:
+        elif upload or example:
             try:
-                if upload.size > 8 * 1024 * 1024:
+                if upload and upload.size > 8 * 1024 * 1024:
                     raise ValueError('Image exceeds 8 MB')
-                image = Image.open(upload)
+                image = Image.open(upload if upload else example)
                 if image.width * image.height > 20_000_000:
                     raise ValueError('Image exceeds 20 megapixels')
                 batch = prepare_image(image)

@@ -36,6 +36,15 @@ python -m lens.train --architecture residual --epochs 50 --output artifacts/resi
 python -m pytest -q
 ```
 
+Training now saves both the best and latest checkpoint, and normalizes one batch at a time to reduce memory use. Continue an interrupted experiment with the same architecture, seed, limit and batch size:
+
+```bash
+python -m lens.train --architecture residual --epochs 50 --batch-size 128 --output artifacts/residual --resume
+python -m lens.compare artifacts/baseline artifacts/residual
+```
+
+The app includes real dataset examples when a completed experiment provides them. See [hosting instructions](docs/HOSTING.md) for Streamlit Community Cloud and container deployment.
+
 Training downloads CIFAR-10 on first use. On modest hardware, start with batch size 64. Each experiment directory must be empty to prevent accidental overwrites. Training writes model.keras, results.json, epochs.csv and errors.npz. Keep weights out of ordinary Git commits; distribute trained weights through release assets.
 
 ## Features
