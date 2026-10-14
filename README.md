@@ -57,7 +57,7 @@ python -m lens.fetch <release-zip-url> --output artifacts/resnet20
 
 ## Train
 
-For GPU training, the easiest route is the [Colab notebook](notebooks/Train_on_Colab.ipynb). It saves checkpoints to Google Drive so a disconnected session can resume.
+For GPU training, use the [Colab notebook](notebooks/Train_on_Colab.ipynb). It can save checkpoints to Google Drive when you choose to mount it; otherwise checkpoints remain in the temporary runtime.
 
 ```bash
 # Short pipeline check (not a benchmark)
@@ -105,8 +105,8 @@ tests/              Unit, integration and dashboard tests
 ## Design decisions
 
 - **Why a separate validation split?** The original notebook selected its model on the test set, which inflates the reported score. Here the test set is used once.
-- **Why augmentation in the data pipeline?** Keras `RandomCrop` resizes the whole padded image at inference time. Putting it inside the model would shrink every evaluated image, so augmentation happens in `tf.data`, for training only.
-- **Why temperature scaling?** Networks trained with cross-entropy tend to be overconfident. One validation-fitted temperature fixes most of that without changing any prediction.
+- **Why augmentation in the data pipeline?** Padding followed by a training-dependent crop inside the model creates different preprocessing during training and inference. Training-only augmentation in `tf.data` leaves validation, test and uploaded inputs unchanged.
+- **Why temperature scaling?** A validation-fitted temperature adjusts confidence without changing the predicted class. We measure its effect on calibration; improvement is not guaranteed.
 - **Why logits plus softmax instead of the assignment's ReLU output?** Valid probabilities are needed for calibration and the confidence threshold.
 
 ## Limitations
