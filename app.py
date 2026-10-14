@@ -26,8 +26,14 @@ def load_model(path, modified):
 
 
 historical = json.loads((ROOT / 'evidence/original_results.json').read_text())
-folders = sorted((p.parent for p in (ROOT / 'artifacts').glob('*/results.json')),
-                 key=lambda p: ('smoke' in p.name, p.name))
+def experiment_order(folder):
+    record = json.loads((folder / 'results.json').read_text())
+    history = record['history']
+    best_epoch = int(np.argmin(history['val_loss']))
+    return (record['smoke_run'], -history['val_accuracy'][best_epoch], folder.name)
+
+
+folders = sorted((p.parent for p in (ROOT / 'artifacts').glob('*/results.json')), key=experiment_order)
 with st.sidebar:
     st.markdown('### ◉ CIFAR Lens')
     st.caption('Ten classes. One transparent experiment.')
