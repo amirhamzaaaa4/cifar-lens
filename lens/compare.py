@@ -14,20 +14,23 @@ def main():
     if any(result['smoke_run'] for result in results):
         parser.error('Smoke runs cannot be benchmarked')
     protocols = {(r['seed'], r['training_samples'], r['validation_samples'], r['test_samples'],
-                  r['command_config']['epochs'], r['command_config']['batch_size']) for r in results}
+                  r['command_config']['batch_size']) for r in results}
     if len(protocols) != 1:
-        parser.error('Experiments must use the same seed, split counts, epoch budget and batch size')
+        parser.error('Experiments must use the same seed, split counts and batch size')
     args.output.mkdir(parents=True, exist_ok=True)
     fields = ['architecture', 'accuracy', 'macro_f1', 'ece', 'raw_ece', 'parameters', 'training_seconds']
-    rows = [{key: r[key] for key in fields} for r in results]
+    rows = [{**{key: r[key] for key in fields},
+             'epoch_budget': r['command_config']['epochs'],
+             'epochs_completed': len(r['history']['loss'])} for r in results]
+    fields += ['epoch_budget', 'epochs_completed']
     with (args.output / 'comparison.csv').open('w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader(); writer.writerows(rows)
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.bar([r['architecture'] for r in results], [r['accuracy'] for r in results], color=['#5CE0C6', '#687FFF'][:len(results)])
+    ax.bar([r['architecture'] for r in results], [r['accuracy'] for r in results], color='#687FFF')
     ax.set_ylim(0, 1); ax.set_ylabel('Held-out test accuracy')
-    ax.set_title('CIFAR Lens · same evaluation protocol')
+    ax.set_title('CIFAR Lens · common split, reported training budgets')
     for i, r in enumerate(results):
         ax.text(i, r['accuracy'] + .015, f"{r['accuracy']:.2%}", ha='center')
     fig.tight_layout(); fig.savefig(args.output / 'accuracy.png', dpi=160); plt.close(fig)

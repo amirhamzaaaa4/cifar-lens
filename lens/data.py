@@ -23,4 +23,5 @@ def stratified_split(labels, fraction=0.1, seed=73):
 def prepare_image(image):
     from PIL import ImageOps, Image
     image = ImageOps.exif_transpose(image).convert('RGB')
-    return np.asarray(image.resize((32, 32), Image.Resampling.BILINEAR), dtype=np.float32)[None] / 255.0
+    image = ImageOps.fit(image, (32, 32), method=Image.Resampling.BILINEAR, centering=(0.5, 0.5))
+    return np.asarray(image, dtype=np.float32)[None] / 255.0

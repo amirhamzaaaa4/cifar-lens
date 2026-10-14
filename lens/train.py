@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--limit', type=int, default=0, help='Training samples for smoke tests; 0 uses all')
     parser.add_argument('--output', type=Path, default=Path('artifacts/residual'))
     parser.add_argument('--resume', action='store_true', help='Continue a checkpoint in the output folder')
+    parser.add_argument('--deterministic', action='store_true', help='Request deterministic TensorFlow operations')
     parser.add_argument('--target-accuracy', type=float, default=0.91, help='Recorded goal, never used to alter test results')
     args = parser.parse_args()
     if not 0 < args.target_accuracy <= 1:
@@ -39,12 +40,20 @@ def main():
     if args.resume:
         if not config_path.exists():
             parser.error('Resume requires training_config.json to verify the original data protocol')
-        if json.loads(config_path.read_text()) != config:
+        saved_config = json.loads(config_path.read_text())
+        # Older checkpoints always enabled deterministic operations.
+        deterministic = saved_config.get('deterministic', True)
+        if args.deterministic and not deterministic:
+            parser.error('Cannot change determinism while resuming')
+        if {key: saved_config[key] for key in config} != config:
             parser.error('Resume settings must match the original architecture, seed, sample limit and batch size')
     else:
+        deterministic = args.deterministic
+        config['deterministic'] = deterministic
         config_path.write_text(json.dumps(config, indent=2), encoding='utf-8')
     tf.keras.utils.set_random_seed(args.seed)
-    tf.config.experimental.enable_op_determinism()
+    if deterministic:
+        tf.config.experimental.enable_op_determinism()
     (x, y), (xt, yt) = tf.keras.datasets.cifar10.load_data()
     y, yt = y.reshape(-1), yt.reshape(-1)
     if args.limit:
@@ -133,7 +142,11 @@ def main():
         for number, index in enumerate(candidates[:3]):
             Image.fromarray(xt[index]).save(gallery / f'{name}_{number}.png')
     errors = np.flatnonzero(predictions != yt)
-    errors = errors[np.argsort(-probabilities[errors].max(axis=1))][:48]
+    errors = np.concatenate([
+        class_errors[np.argsort(-probabilities[class_errors].max(axis=1))][:12]
+        for label in range(10)
+        for class_errors in [errors[yt[errors] == label]]
+    ])
     np.savez_compressed(args.output / 'errors.npz', images=xt[errors],
                         truth=yt[errors], prediction=predictions[errors], confidence=probabilities[errors].max(axis=1))
     import csv

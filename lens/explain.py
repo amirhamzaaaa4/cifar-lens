@@ -3,8 +3,13 @@ import tensorflow as tf
 from PIL import Image
 
 
-def gradcam(model, batch, class_index=None):
-    probe = tf.keras.Model(model.input, [model.get_layer('features').output, model.output])
+def build_probe(model):
+    return tf.keras.Model(model.inputs, [model.get_layer('features').output, model.output])
+
+
+def gradcam(model, batch, class_index=None, probe=None):
+    if probe is None:
+        probe = build_probe(model)
     with tf.GradientTape() as tape:
         features, logits = probe(batch, training=False)
         target = int(tf.argmax(logits[0])) if class_index is None else class_index
