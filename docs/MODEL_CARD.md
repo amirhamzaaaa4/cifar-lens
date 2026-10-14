@@ -6,7 +6,7 @@ Educational exploration of ten-class image classification, uncertainty and error
 
 ## Data and protocol
 
-Official CIFAR-10: 50,000 training and 10,000 test images, RGB, 32 × 32. A seeded stratified split reserves 10% of official training images for validation. Test labels do not control callbacks or temperature selection. Sparse integer labels and logits are paired with sparse cross-entropy. The assignment specification's ReLU output instruction is not used because this portfolio version needs valid class probabilities, obtained by softmax over logits.
+Official CIFAR-10: 50,000 training and 10,000 test images, RGB, 32 × 32. A seeded stratified split reserves 10% of official training images for validation. Test labels do not control callbacks or temperature selection. Ordinary runs use integer labels and sparse cross-entropy; label-smoothed runs use one-hot labels and categorical cross-entropy. Class probabilities use softmax over logits.
 
 ## Models
 

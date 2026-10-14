@@ -26,3 +26,5 @@ The supplied update was initially checked without TensorFlow. After integration 
 - Ruff passed for the maintained source. The historical group notebook is excluded to preserve its archived code.
 - A corrected one-epoch ResNet20 smoke run completed with 900 training, 100 validation and 10,000 test images, label smoothing 0.1, Cutout 8 and flip TTA. It saved checkpoints, exported weights, calibration and error examples. Its 10.00% test accuracy is an execution check, not a benchmark.
 - Mixed-precision GPU training and the full accuracy target still require a completed GPU run. Robustness, unknown-image detection and multiple-seed results remain unmeasured.
+
+The expanded suite passed 22 model and utility tests, including mixed-precision training/float32 export and saved corrected ResNet20 inference. The dashboard hit its 60-second cold-start limit in the combined run while CPU training was active; with a writable plotting cache and a 180-second test limit, it passed in 48.78 seconds. This checks dashboard execution, not browser interaction or hosted performance.
