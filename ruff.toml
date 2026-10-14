@@ -1,0 +1,7 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["notebooks/original_group_notebook.ipynb"]
+
+[lint]
+# Pyflakes (unused/undefined names) and syntax errors; style is left to authors.
+select = ["F", "E9"]

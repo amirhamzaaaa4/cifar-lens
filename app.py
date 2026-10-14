@@ -1,11 +1,12 @@
 from pathlib import Path
 import json
 import hashlib
+import os
 import numpy as np
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
 from lens.data import CLASSES, prepare_image
-from lens.metrics import softmax
+from lens.metrics import softmax, flip_averaged_logits
 
 ROOT = Path(__file__).parent
 st.set_page_config(page_title='CIFAR Lens · Vision Lab', page_icon='◉', layout='wide')
@@ -19,14 +20,32 @@ st.markdown('''<style>
 <p>A hands-on lab for image classification, model confidence, and the mistakes that tell us what to improve.</p></div>''', unsafe_allow_html=True)
 
 
-@st.cache_resource
-def load_model(path, modified, size, expected_hash):
+@st.cache_resource(show_spinner='Loading model…')
+def load_model(path, modified, expected_sha256):
+    """Verify the checksum once per model file version, then keep the model in memory."""
     import tensorflow as tf
     from lens.explain import build_probe
-    if hashlib.sha256(Path(path).read_bytes()).hexdigest() != expected_hash:
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest() != expected_sha256:
         raise ValueError('Model and evaluation record do not match')
     model = tf.keras.models.load_model(path)
     return model, build_probe(model)
+
+
+@st.cache_resource(show_spinner='Downloading published model…')
+def install_published_experiment(url):
+    """Hosted demos: fetch release weights once when LENS_EXPERIMENT_URL is set."""
+    from lens.fetch import fetch
+    target = ROOT / 'artifacts' / 'published'
+    if not (target / 'results.json').exists():
+        fetch(url, target)
+    return str(target)
+
+
+if os.environ.get('LENS_EXPERIMENT_URL'):
+    try:
+        install_published_experiment(os.environ['LENS_EXPERIMENT_URL'])
+    except Exception as exc:  # the dashboard still opens with historical evidence
+        st.error(f'Could not install the published model: {exc}')
 
 
 historical = json.loads((ROOT / 'evidence/original_results.json').read_text())
@@ -59,7 +78,9 @@ if results and results['smoke_run']:
     st.warning('Smoke-test experiment: trained on a small subset to verify the software. This is not a performance benchmark.')
 cols = st.columns(4)
 cols[0].metric('Historical notebook accuracy', f"{historical['accuracy']:.2%}")
-cols[1].metric('Fresh test accuracy', f"{results['accuracy']:.2%}" if results else 'Awaiting training')
+ci = results.get('accuracy_ci95') if results else None
+cols[1].metric('Fresh test accuracy', f"{results['accuracy']:.2%}" if results else 'Awaiting training',
+               help=f"95% bootstrap interval {ci[0]:.2%}–{ci[1]:.2%}" if ci else None)
 cols[2].metric('Macro F1', f"{results['macro_f1']:.3f}" if results else '—')
 cols[3].metric('Calibration error', f"{results['ece']:.3f}" if results else '—')
 st.caption('The historical result reused the test set as validation. Fresh experiments reserve an independent validation split; these scores are not directly comparable.')
@@ -87,10 +108,11 @@ with predict:
                     raise ValueError('Image exceeds 20 megapixels')
                 batch = prepare_image(image)
                 model_path = selected / 'model.keras'
-                model_stat = model_path.stat()
-                model, probe = load_model(str(model_path), model_stat.st_mtime_ns,
-                                          model_stat.st_size, results['model_sha256'])
-                probabilities = softmax(model(batch, training=False).numpy(), results['temperature'])[0]
+                model, probe = load_model(str(model_path), model_path.stat().st_mtime_ns, results['model_sha256'])
+                def model_logits(images):
+                    return model(images, training=False).numpy()
+                logits = flip_averaged_logits(model_logits, batch) if results.get('tta') else model_logits(batch)
+                probabilities = softmax(logits, results['temperature'])[0]
                 index = int(probabilities.argmax())
                 st.subheader(CLASSES[index].title())
                 st.metric('Top class score', f'{probabilities[index]:.1%}')
@@ -101,7 +123,7 @@ with predict:
                 a, b = st.columns(2)
                 small = Image.fromarray(np.uint8(batch[0] * 255))
                 a.image(small, caption='What the model sees', width=256)
-                b.image(overlay(small, gradcam(model, batch, index, probe=probe)), caption='Grad-CAM · coarse supporting regions', width=256)
+                b.image(overlay(small, gradcam(model, batch, index, probe)), caption='Grad-CAM · coarse supporting regions', width=256)
                 st.caption("Grad-CAM highlights regions influencing this score; it does not prove the model's reasoning. Uploaded images may differ substantially from CIFAR-10.")
                 st.download_button('Download prediction JSON', json.dumps({'class': CLASSES[index],
                     'scores': dict(zip(CLASSES, probabilities.tolist())), 'temperature': results['temperature'],
@@ -152,14 +174,14 @@ with mistakes:
                 caption=f"True: {CLASSES[int(data['truth'][i])]} · Predicted: {CLASSES[int(data['prediction'][i])]} ({data['confidence'][i]:.0%})",
                 width='stretch')
         if not indices:
-            st.info('No saved errors for this class in this experiment.')
+            st.info('No saved errors for this class.')
     else:
         st.info('Error examples are generated from actual test predictions after training.')
 with about:
     st.subheader('From assignment to reproducible lab')
     st.markdown('''**Pipeline:** official training set → stratified training/validation split → augmentation → CNN → validation-only calibration → final test evaluation.
 
-The new residual CNN uses shortcut connections, batch normalization and global average pooling. A smaller baseline uses the same data protocol for a fair comparison. Architecture improvements are hypotheses until measured.
+Three architectures share one data protocol: a small **baseline** CNN, a compact **residual** CNN, and **ResNet20** (He et al., 2016) trained with pad-crop-flip augmentation, optional Cutout and label smoothing, SGD with warm-up and cosine decay, and optional flip test-time augmentation. Each improvement is measured, not assumed.
 
 **Classes:** airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck.
 

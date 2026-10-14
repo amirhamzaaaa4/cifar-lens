@@ -1,9 +1,13 @@
 .git
+.github
 __pycache__
 .pytest_cache
+.ruff_cache
 .venv
 notebooks
+tests
 artifacts/*/best.keras
 artifacts/*/latest.keras
 artifacts/*/progress.json
+artifacts/*/training_config.json
 artifacts/*/epochs.csv
