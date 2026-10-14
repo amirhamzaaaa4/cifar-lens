@@ -21,7 +21,12 @@ def stratified_split(labels, fraction=0.1, seed=73):
 
 
 def prepare_image(image):
+    """Upright RGB, centre-cropped to a square, then resized to 32 x 32.
+
+    Cropping first keeps object proportions; a plain resize would squash wide
+    or tall photos.
+    """
     from PIL import ImageOps, Image
     image = ImageOps.exif_transpose(image).convert('RGB')
-    image = ImageOps.fit(image, (32, 32), method=Image.Resampling.BILINEAR, centering=(0.5, 0.5))
+    image = ImageOps.fit(image, (32, 32), Image.Resampling.BICUBIC, centering=(0.5, 0.5))
     return np.asarray(image, dtype=np.float32)[None] / 255.0

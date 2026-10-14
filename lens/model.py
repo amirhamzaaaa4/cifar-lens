@@ -1,8 +1,15 @@
 import tensorflow as tf
 
 
-def build_model(architecture='residual', seed=73):
-    """Functional graph with logits and a named feature map for Grad-CAM."""
+ARCHITECTURES = ('baseline', 'residual', 'resnet20')
+
+
+def build_model(architecture='residual', seed=73, label_smoothing=0.0):
+    """Functional graph with logits and a named feature map for Grad-CAM.
+
+    With label_smoothing > 0 the model expects one-hot labels; otherwise
+    integer labels.
+    """
     tf.keras.utils.set_random_seed(seed)
     L = tf.keras.layers
     inputs = L.Input((32, 32, 3), name='image')
@@ -13,10 +20,10 @@ def build_model(architecture='residual', seed=73):
             x = L.MaxPooling2D()(x)
         x = L.Conv2D(64, 3, padding='same', activation='relu', name='features')(x)
     elif architecture == 'resnet20':
-        # CIFAR-scale 20-layer residual network, trained from scratch.
-        x = L.ZeroPadding2D(4)(x)
-        x = L.RandomCrop(32, 32, seed=seed)(x)
-        x = L.RandomFlip('horizontal', seed=seed + 1)(x)
+        # CIFAR-scale 20-layer residual network (He et al., 2016), trained from
+        # scratch. Pad/crop/flip augmentation lives in the data pipeline
+        # (lens.augment): Keras RandomCrop resizes the padded image at
+        # inference, which would shrink every evaluated object.
         x = L.Rescaling(2., offset=-1.)(x)
         def convolution(value, filters, stride=1, size=3):
             return L.Conv2D(filters, size, strides=stride, padding='same',
@@ -59,9 +66,18 @@ def build_model(architecture='residual', seed=73):
     x = L.GlobalAveragePooling2D()(x)
     if architecture != 'resnet20':
         x = L.Dropout(0.3)(x)
-    logits = L.Dense(10, name='logits')(x)
+    # float32 logits keep softmax and the loss stable under mixed precision.
+    logits = L.Dense(10, name='logits', dtype='float32')(x)
     model = tf.keras.Model(inputs, logits, name=f'cifar_{architecture}')
-    optimizer = tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.9) if architecture == 'resnet20' else tf.keras.optimizers.Adam(1e-3)
-    model.compile(optimizer=optimizer,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+    if architecture == 'resnet20':
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.9, nesterov=True)
+    else:
+        optimizer = tf.keras.optimizers.Adam(1e-3)
+    if label_smoothing > 0:
+        loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True, label_smoothing=label_smoothing)
+        metric = tf.keras.metrics.CategoricalAccuracy(name='accuracy')
+    else:
+        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        metric = tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')
+    model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
     return model
