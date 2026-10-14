@@ -19,6 +19,12 @@ def recipe_label(result):
         parts.append(f"cutout{recipe['cutout']}")
     if recipe.get('tta'):
         parts.append('tta')
+    if 'batch_size' in result['command_config']:
+        parts.append(f"batch{result['command_config']['batch_size']}")
+    if recipe.get('mixed_precision'):
+        parts.append('mixed')
+    if recipe.get('deterministic'):
+        parts.append('deterministic')
     return ' · '.join(parts)
 
 
@@ -38,7 +44,10 @@ def summarize(results):
         if len(set(seeds)) != len(seeds):
             raise ValueError(f'Duplicate seed within recipe {label}')
         row = {'recipe': label, 'runs': len(runs), 'seeds': ' '.join(map(str, seeds)),
-               'parameters': runs[0]['parameters']}
+               'parameters': runs[0]['parameters'],
+               'epoch_budget': runs[0]['command_config']['epochs'],
+               'batch_size': runs[0]['command_config'].get('batch_size'),
+               'epochs_completed': ' '.join(str(r.get('epochs_trained', len(r.get('history', {}).get('loss', [])))) for r in runs)}
         for key in ('accuracy', 'macro_f1', 'ece', 'training_seconds'):
             values = np.array([r[key] for r in runs], dtype=float)
             row[key] = float(values.mean())
@@ -72,7 +81,7 @@ def main(argv=None):
     low = max(0, min(accuracy) - 0.1)
     ax.set_ylim(low, 1)
     ax.set_ylabel('Held-out test accuracy')
-    ax.set_title('CIFAR Lens · same data split, mean ± std over seeds')
+    ax.set_title('CIFAR Lens · common split sizes, reported budgets, mean ± std')
     for i, r in enumerate(rows):
         ax.text(i, r['accuracy'] + r['accuracy_std'] + .005, f"{r['accuracy']:.2%}", ha='center')
     fig.tight_layout()
