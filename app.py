@@ -123,11 +123,13 @@ with predict:
                 a, b = st.columns(2)
                 small = Image.fromarray(np.uint8(batch[0] * 255))
                 a.image(small, caption='What the model sees', width=256)
-                b.image(overlay(small, gradcam(model, batch, index, probe)), caption='Grad-CAM · coarse supporting regions', width=256)
+                b.image(overlay(small, gradcam(model, batch, index, probe)), caption='Grad-CAM · original image view', width=256)
+                if results.get('tta'):
+                    st.caption('Scores average the original and mirrored image. This heatmap explains the original view for the selected class.')
                 st.caption("Grad-CAM highlights regions influencing this score; it does not prove the model's reasoning. Uploaded images may differ substantially from CIFAR-10.")
                 st.download_button('Download prediction JSON', json.dumps({'class': CLASSES[index],
                     'scores': dict(zip(CLASSES, probabilities.tolist())), 'temperature': results['temperature'],
-                    'model_sha256': results['model_sha256']}, indent=2), 'prediction.json', 'application/json')
+                    'model_sha256': results['model_sha256'], 'tta': bool(results.get('tta'))}, indent=2), 'prediction.json', 'application/json')
             except (UnidentifiedImageError, ValueError, OSError, Image.DecompressionBombError) as exc:
                 st.error(str(exc))
         else:
