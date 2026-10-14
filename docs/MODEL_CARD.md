@@ -10,17 +10,19 @@ Official CIFAR-10: 50,000 training and 10,000 test images, RGB, 32 × 32. A seed
 
 ## Models
 
-Baseline: three convolution layers and pooling. Residual: three stages with 32/64/128 channels, shortcut connections, batch normalization, L2 regularization, dropout, horizontal flips and translations. Both use global average pooling. Neither is claimed to exceed the original score until fully trained and evaluated.
+- **Baseline:** three convolution layers with pooling. Adam optimizer, early stopping on validation loss.
+- **Residual CNN:** three stages with 32/64/128 channels, shortcut connections, batch normalization, L2 regularization, dropout, and in-model horizontal flips and translations (both are identity at inference).
+- **ResNet20** (He et al., 2016): 3 × 3 residual blocks with 16/32/64 channels and about 0.27 M parameters. Nesterov SGD with 5-epoch warm-up and cosine decay, L2 1e-4. Training-only pad-4 random crop, horizontal flip and optional Cutout in the `tf.data` pipeline, optional label smoothing, and optional flip test-time augmentation. Augmentation is kept out of the saved model, so inference always sees the unmodified image.
 
-ResNet20: three stages with 16/32/64 channels and three two-convolution residual blocks per stage. Padded random crops and horizontal flips augment training images. SGD with momentum uses five warmup epochs followed by cosine learning-rate decay. The GPU notebook requests 200 epochs. The 91% test-accuracy target remains unmeasured until evaluation completes.
+All use global average pooling and float32 logits. No architecture is claimed to beat another until measured under the same split.
 
 ## Evaluation
 
-Accuracy, macro F1, class precision/recall/F1, confusion matrix and 15-bin expected calibration error. Temperature is selected using validation negative log likelihood over a fixed grid. Calibrated probability scores are not guarantees. New runs save up to 12 confident mistakes per true class; older artifacts contain the 48 most confident errors overall. Both are selected samples, not representative of all errors. Comparisons report epoch budgets and completed epochs; different budgets do not isolate architecture effects.
+Accuracy with a 2,000-sample bootstrap 95% interval, macro F1, class precision/recall/F1, confusion matrix and 15-bin expected calibration error. Temperature is selected using validation negative log likelihood over a fixed grid. Calibrated probability scores are not guarantees. The error explorer saves the 8 most confident test mistakes per true class, which is a selected sample and not representative of all errors. When TTA is enabled, temperature is fitted on TTA validation logits, and the app applies the same TTA.
 
 ## Known limitations
 
-Fixed categories force every image into a known class. High-confidence out-of-distribution failures remain possible. Grad-CAM is a coarse attribution tool, not causal evidence or a correctness guarantee. Uploaded images are center-cropped before resizing, which can remove objects near their edges. Deterministic operations are optional with --deterministic; older checkpoints preserve their original deterministic setting when resumed. Cross-platform bitwise reproducibility is not guaranteed.
+Fixed categories force every image into a known class. High-confidence out-of-distribution failures remain possible. Grad-CAM is a coarse attribution tool, not causal evidence or a correctness guarantee. Resizing arbitrary uploads can remove critical detail. Bitwise determinism is opt-in (`--deterministic`) because it slows GPU training; cross-platform bitwise reproducibility is not guaranteed.
 
 ## Evidence status
 

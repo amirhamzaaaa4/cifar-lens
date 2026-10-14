@@ -6,4 +6,4 @@
 4. Open Error explorer. Find a confident wrong prediction and explain why confidence alone is insufficient.
 5. Explain attribution to the original group and AI-assisted portfolio extension.
 
-For a credible GitHub release, train baseline and residual under the same seed, epoch budget and data protocol. Record actual scores and hardware. Never advertise the smoke run or historical score as the new model's benchmark.
+For a credible GitHub release, train baseline, residual and ResNet20 on the same data split, and run ResNet20 with three seeds so `lens.compare` reports mean ± std. Record actual scores and hardware. Never present the smoke run or the historical score as the new model's benchmark.
