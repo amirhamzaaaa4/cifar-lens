@@ -27,3 +27,7 @@ Fixed categories force every image into a known class. High-confidence out-of-di
 ## Evidence status
 
 Original notebook records 85.07% accuracy and macro F1 0.8488 but reused test data as validation. New artifacts contain explicit sample counts, seed, architecture, versions and model checksum. Smoke runs are labeled and excluded from benchmark claims.
+
+The corrected ResNet20 completed 180 epochs with seed 73, batch size 128, label smoothing 0.1, Cutout 8, mirror TTA and mixed-precision GPU training. Its float32 export achieved **93.51% test accuracy** on 10,000 held-out images (95% bootstrap CI **93.03%–93.98%**), macro F1 **0.93499** and calibrated ECE **0.01411**. It has 274,042 parameters. The 91% target was met. This is a single-seed measurement, not a robustness or multi-seed guarantee.
+
+The [public browser demo](https://huggingface.co/spaces/AMIRHAMZAAAA4/cifar-lens) uses the actual weights. Thirty identical CIFAR-10 images matched all Python classes, with maximum calibrated-score difference 2.38e-7 on the tested WebGL browser. Uploaded photos stay in browser memory; the host and script CDN receive ordinary page requests. Browser resizing of uploads can differ from Pillow bicubic. Grad-CAM uses the exact formula for this model's global-average-pooling/linear head and explains the original view while scores use mirror TTA.

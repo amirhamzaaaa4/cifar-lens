@@ -1,5 +1,11 @@
 # Public demo deployment
 
+The live deployment is now the free [Hugging Face static Space](https://huggingface.co/spaces/AMIRHAMZAAAA4/cifar-lens). Upload the contents of `web/` directly to a Static Space. It requires no GitHub or Drive authorization. The model runs in the visitor's browser; the host serves public files. Browser and Python predictions are compared on thirty identical CIFAR-10 images before inference is enabled.
+
+Rebuild the browser assets from a verified full experiment with `python -m lens.export_browser --experiment artifacts/resnet20-corrected-s73 --output web`. This exports the layer graph, float32 weights with checksum, metrics, real error images and Python reference logits/probabilities. The static `README.md`, HTML, CSS and JavaScript are maintained alongside them.
+
+Hugging Face's account setup currently requires a paid plan for Docker/Gradio compute. The following alternatives describe running the full Python Streamlit application, not the free static demo.
+
 TensorFlow inference runs on the server, so the app needs Python hosting. Static hosts such as GitHub Pages cannot run it.
 
 ## 1. Publish the trained model

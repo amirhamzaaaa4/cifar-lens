@@ -1,6 +1,6 @@
 # The 91 percent target
 
-The target is at least 91% accuracy on the official 10,000-image CIFAR-10 test set. It is a goal, not a measured result or a guarantee. The current smaller residual model remains a reference experiment.
+The target was at least 91% accuracy on the official 10,000-image CIFAR-10 test set. The corrected 180-epoch run achieved **93.51%** (95% CI **93.03%–93.98%**) with `smoke_run: false`. See [the completed result](TRAINED_RESULT.md). The smaller residual model remains a separate reference experiment. A single-seed measurement does not guarantee identical performance on further runs.
 
 The corrected ResNet20 candidate uses training-only padded crops and flips, He initialization, L2 regularization, Nesterov momentum SGD, warm-up and cosine learning-rate decay. The current 180-epoch recipe also enables label smoothing, Cutout, mirror averaging and mixed precision. It is trained from scratch.
 

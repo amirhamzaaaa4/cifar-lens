@@ -28,3 +28,15 @@ The supplied update was initially checked without TensorFlow. After integration 
 - Mixed-precision GPU training and the full accuracy target still require a completed GPU run. Robustness, unknown-image detection and multiple-seed results remain unmeasured.
 
 The expanded suite passed 22 model and utility tests, including mixed-precision training/float32 export and saved corrected ResNet20 inference. The dashboard hit its 60-second cold-start limit in the combined run while CPU training was active; with a writable plotting cache and a 180-second test limit, it passed in 48.78 seconds. This checks dashboard execution, not browser interaction or hosted performance.
+
+## Completed model and public browser demo — 14 October 2026
+
+The full corrected ResNet20 GPU run completed all 180 epochs. Its record confirms `smoke_run: false`, `architecture: resnet20`, 45,000 training images, 5,000 validation images and 10,000 test images. Test accuracy is **93.51%**, 95% bootstrap interval **93.03%–93.98%**, macro F1 **0.93498555**, and calibrated ECE **0.01410733** (raw ECE **0.06410152**). The best validation-loss checkpoint was exported to float32 before measurement. Model and release archive checksums were verified after transfer to the laptop.
+
+The trained experiment is published in [GitHub Release v1.0.0](https://github.com/amirhamzaaaa4/cifar-lens/releases/tag/v1.0.0). The historical notebook's test-as-validation score remains non-comparable; this is a single-seed result.
+
+The [Hugging Face static demo](https://huggingface.co/spaces/AMIRHAMZAAAA4/cifar-lens) uses the actual float32 weights and runs locally in the browser. Its weights checksum is checked before prediction. Thirty identical CIFAR-10 test images were compared with Python: **30/30 class matches**, maximum calibrated-score difference **2.38e-7**, and maximum logit difference **2.80e-6** on the tested WebGL browser. The check runs again on each page initialization and prevents prediction if it fails.
+
+Browser interaction verified a real uploaded `ship_1.png` (ship, 96.33% calibrated confidence), sample selection, displayed Grad-CAM, and the cat filter containing eight authentic errors. Screenshots and an animated sequence of actual app views are stored under `evidence/trained/`. The Grad-CAM formula is exact for this model's global-average-pooling and linear classifier head; it explains the original view while scores use mirror TTA.
+
+Uploaded photos are centre-cropped and normalized consistently. Browser canvas resize is not claimed to be bit-identical to Pillow bicubic. Browser parity is measured on identical stored CIFAR-10 pixels, not independently decoded/resized photos. Additional seeds, robustness and unknown-object detection remain unmeasured. Baseline and residual reference training are separate optional experiments.
