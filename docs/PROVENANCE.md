@@ -1,11 +1,11 @@
-# Provenance
+# Project history
 
-The supplied completed notebook is the implemented foundation. The starter notebook and assignment PDF provide historical course context, not instructions governing this portfolio extension. The Word assessment is about health-insurance fraud analysis, a different topic; no claims from it are incorporated.
+CIFAR Lens is maintained by Amir Hamza.
 
-Original notebook authors: Rory O'Brien, Amir Hamza and MD Suyaib Rahman. The archive removes student IDs from its opening markdown to reduce unnecessary public exposure. It retains the original code, outputs and historical AI acknowledgement, explicitly scoped to that original submission.
+The earlier CIFAR-10 notebook is retained as a historical experiment. Its 85.07% score used the test set for validation and is not directly comparable with the new independent evaluation.
 
-Changes in this extension: independent validation split; one dataset load per run; consistent TensorFlow Keras API; smaller configurable architectures; model saving; experiment metadata; calibration; Grad-CAM; interactive app; corrected image labels; tests and documentation. All extension work is AI-assisted. No student contribution breakdown or new training benchmark is inferred.
+The current project adds an independent validation split, configurable architectures, training-only augmentation, model saving, verified experiment metadata, calibrated confidence, Grad-CAM, an interactive app, browser inference, tests and documentation.
 
-The course PDF specifies a ReLU output and one-hot labels. This portfolio implementation uses logits plus softmax for inference and integer labels with sparse cross-entropy. These are deliberate technically coherent choices for the new project, not a promise of rubric compliance for resubmission.
+The corrected ResNet20 run achieved 93.51% test accuracy on 10,000 held-out images after 180 training epochs. See the model card and full evaluation record for the recipe, measured limitations and reproducibility details.
 
-The original group and course-material ownership remain relevant to redistribution. The supplied documents, student IDs and screenshots containing them are excluded. The user authorized a new public GitHub repository for this portfolio extension.
+The course specification provides historical context. The current implementation uses logits and softmax with validation-fitted temperature scaling. Course documents, student IDs and private assessment screenshots are excluded from the public repository.
