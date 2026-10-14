@@ -4,7 +4,7 @@ from lens.explain import gradcam
 
 
 def test_both_architectures_train_and_explain():
-    for architecture in ('baseline', 'residual'):
+    for architecture in ('baseline', 'residual', 'resnet20'):
         model = build_model(architecture)
         x = np.random.default_rng(73).random((2, 32, 32, 3), dtype=np.float32)
         assert model(x, training=False).shape == (2, 10)

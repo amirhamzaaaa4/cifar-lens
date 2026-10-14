@@ -20,6 +20,14 @@ def test_rgb_contract():
     assert np.all(batch == 1)
 
 
+def test_wide_image_preserves_square_center():
+    image = np.zeros((32, 96, 3), dtype=np.uint8)
+    image[:, 32:64, 1] = 255
+    batch = prepare_image(Image.fromarray(image))[0]
+    assert np.all(batch[..., 1] == 1)
+    assert np.all(batch[..., [0, 2]] == 0)
+
+
 def test_softmax_is_stable():
     assert np.allclose(softmax([[10000, 10000]]), [[.5, .5]])
     with pytest.raises(ValueError):
