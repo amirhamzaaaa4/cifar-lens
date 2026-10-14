@@ -8,6 +8,8 @@ An interactive computer-vision lab built from a university CIFAR-10 CNN project.
 
 **TensorFlow · Streamlit · reproducible experiments · calibration · model interpretability**
 
+**Current goal: at least 91% held-out test accuracy.** A new ResNet20 candidate and a [GPU training notebook](notebooks/CIFAR_Lens_Target91_Colab.ipynb) are included. This is a training target, not a measured result. See the [accuracy protocol](docs/ACCURACY_TARGET.md).
+
 ## Why this project exists
 
 A model score alone tells little about how a classifier behaves. CIFAR Lens connects predictions to evaluation evidence: per-class performance, model confidence, visual attribution, and error examples. It also fixes the original experiment's test/validation overlap.
@@ -24,7 +26,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-The dashboard opens without weights and shows historical evidence. Live inference requires a trained experiment. No scores, predictions, heatmaps or benchmark improvements are fabricated.
+The dashboard opens with historical evaluation evidence. Add a completed experiment to enable predictions, Grad-CAM and error exploration.
 
 ```bash
 # Quick pipeline check; not an accuracy benchmark
@@ -33,6 +35,7 @@ python -m lens.train --epochs 1 --limit 1000 --output artifacts/smoke
 # Full experiments under the same protocol
 python -m lens.train --architecture baseline --epochs 50 --output artifacts/baseline
 python -m lens.train --architecture residual --epochs 50 --output artifacts/residual
+python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
@@ -56,15 +59,17 @@ Training downloads CIFAR-10 on first use. On modest hardware, start with batch s
 - Explorer for the model's most confident test errors
 - Seeded stratified split, separate final test evaluation and model checksum
 - Smaller baseline and residual CNN with a consistent evaluation protocol
+- ResNet20 and a T4 Colab notebook for longer GPU experiments
 - Tests and GitHub Actions workflow
 
-## Results and honest comparison
+## Results
 
 | Experiment | Accuracy | Macro F1 | Status |
 |---|---:|---:|---|
 | Original supplied notebook | 85.07% | 0.8488 | Historical; test set also used for validation |
 | New baseline | Pending full training | Pending | No performance claim |
 | New residual CNN | Pending full training | Pending | No performance claim |
+| ResNet20 | Training target: 91% | Pending | 200-epoch GPU recipe |
 
 A higher score is not promised. Full experiments need to establish whether the residual architecture improves on the new baseline. Comparison with the old score is limited by the changed evaluation protocol.
 
@@ -80,11 +85,16 @@ docs/               Model card, provenance and demo guide
 tests/              Data integrity, numeric and model integration tests
 ```
 
-## Attribution and AI assistance
+## Design decisions
 
-Original CIFAR-10 assignment by **Rory O'Brien, Amir Hamza and MD Suyaib Rahman**, COIT12213, 2025. Group ownership is preserved; individual contribution claims are not invented. The starter notebook was supplied for the course. The original historical notebook's AI declaration describes that original submission only.
+- Reserve validation images from the training set so model selection and calibration leave the test set untouched.
+- Return logits, then fit temperature on validation data to make confidence measurable alongside accuracy.
+- Cache verified weights and the Grad-CAM probe to keep repeated predictions responsive.
+- Record training budgets alongside scores: a longer experiment is not evidence that architecture alone caused an improvement.
 
-The portfolio extension was developed with OpenAI Codex assistance for design, refactoring, new code, tests and documentation. New work must not be described as written without AI assistance. The original notebook is retained with student IDs removed for public sharing; its technical cells and stored results are preserved. Source course documents and the unrelated insurance report are not redistributed in this package.
+## Credits
+
+Original CIFAR-10 assignment by **Rory O'Brien, Amir Hamza and MD Suyaib Rahman**, COIT12213, 2025, using the course starter notebook. This portfolio extension was developed with OpenAI Codex assistance. The archived group notebook retains its technical cells and results, with student IDs removed; its original AI declaration applies to the original submission. See [provenance](docs/PROVENANCE.md).
 
 No license is assigned to the original group work without the contributors' agreement. See [provenance](docs/PROVENANCE.md) before publishing.
 

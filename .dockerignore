@@ -4,4 +4,6 @@ __pycache__
 .venv
 notebooks
 artifacts/*/best.keras
+artifacts/*/latest.keras
+artifacts/*/progress.json
 artifacts/*/epochs.csv

@@ -20,9 +20,13 @@ st.markdown('''<style>
 
 
 @st.cache_resource
-def load_model(path, modified):
+def load_model(path, modified, size, expected_hash):
     import tensorflow as tf
-    return tf.keras.models.load_model(path)
+    from lens.explain import build_probe
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest() != expected_hash:
+        raise ValueError('Model and evaluation record do not match')
+    model = tf.keras.models.load_model(path)
+    return model, build_probe(model)
 
 
 historical = json.loads((ROOT / 'evidence/original_results.json').read_text())
@@ -83,9 +87,9 @@ with predict:
                     raise ValueError('Image exceeds 20 megapixels')
                 batch = prepare_image(image)
                 model_path = selected / 'model.keras'
-                if hashlib.sha256(model_path.read_bytes()).hexdigest() != results['model_sha256']:
-                    raise ValueError('Model and evaluation record do not match')
-                model = load_model(str(model_path), model_path.stat().st_mtime_ns)
+                model_stat = model_path.stat()
+                model, probe = load_model(str(model_path), model_stat.st_mtime_ns,
+                                          model_stat.st_size, results['model_sha256'])
                 probabilities = softmax(model(batch, training=False).numpy(), results['temperature'])[0]
                 index = int(probabilities.argmax())
                 st.subheader(CLASSES[index].title())
@@ -97,7 +101,7 @@ with predict:
                 a, b = st.columns(2)
                 small = Image.fromarray(np.uint8(batch[0] * 255))
                 a.image(small, caption='What the model sees', width=256)
-                b.image(overlay(small, gradcam(model, batch, index)), caption='Grad-CAM · coarse supporting regions', width=256)
+                b.image(overlay(small, gradcam(model, batch, index, probe=probe)), caption='Grad-CAM · coarse supporting regions', width=256)
                 st.caption("Grad-CAM highlights regions influencing this score; it does not prove the model's reasoning. Uploaded images may differ substantially from CIFAR-10.")
                 st.download_button('Download prediction JSON', json.dumps({'class': CLASSES[index],
                     'scores': dict(zip(CLASSES, probabilities.tolist())), 'temperature': results['temperature'],
@@ -148,7 +152,7 @@ with mistakes:
                 caption=f"True: {CLASSES[int(data['truth'][i])]} · Predicted: {CLASSES[int(data['prediction'][i])]} ({data['confidence'][i]:.0%})",
                 width='stretch')
         if not indices:
-            st.info('No saved errors for this class in the top 48 mistakes.')
+            st.info('No saved errors for this class in this experiment.')
     else:
         st.info('Error examples are generated from actual test predictions after training.')
 with about:
