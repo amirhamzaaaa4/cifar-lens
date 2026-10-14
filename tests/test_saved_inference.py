@@ -10,8 +10,9 @@ from lens.data import prepare_image
 from lens.metrics import softmax
 
 
-def test_saved_model_predicts_uploaded_image_and_explains():
-    folder = Path(__file__).parents[1] / 'artifacts' / 'smoke'
+@pytest.mark.parametrize('experiment', ['smoke', 'smoke-r20-verified'])
+def test_saved_model_predicts_uploaded_image_and_explains(experiment):
+    folder = Path(__file__).parents[1] / 'artifacts' / experiment
     if not (folder / 'model.keras').exists():
         pytest.skip('No local saved model; model integration is covered separately')
     import tensorflow as tf
