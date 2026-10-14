@@ -3,6 +3,7 @@ title: CIFAR Lens
 emoji: 🔎
 colorFrom: green
 colorTo: blue
+license: mit
 sdk: static
 app_file: index.html
 pinned: false
@@ -20,4 +21,4 @@ Grad-CAM uses the exact pooled-gradient formula for this model's global-average-
 
 Source and trained-model release: https://github.com/amirhamzaaaa4/cifar-lens
 
-Original assignment: Rory O'Brien, Amir Hamza and MD Suyaib Rahman. Portfolio extension: Amir Hamza with AI coding assistance. No license has been applied pending agreement from the original authors.
+Developed by Amir Hamza. Licensed under the [MIT License](LICENSE).
