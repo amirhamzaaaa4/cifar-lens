@@ -8,4 +8,4 @@ Changes in this extension: independent validation split; one dataset load per ru
 
 The course PDF specifies a ReLU output and one-hot labels. This portfolio implementation uses logits plus softmax for inference and integer labels with sparse cross-entropy. These are deliberate technically coherent choices for the new project, not a promise of rubric compliance for resubmission.
 
-Before public release, confirm the original group's permission and course-material redistribution rights. The supplied documents, student IDs and screenshots containing them are excluded. No repository publication was performed as part of building this local package.
+The original group and course-material ownership remain relevant to redistribution. The supplied documents, student IDs and screenshots containing them are excluded. The user authorized a new public GitHub repository for this portfolio extension.
