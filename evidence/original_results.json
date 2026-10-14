@@ -1,0 +1,78 @@
+{
+  "source": "Original completed notebook, cell 6 stored output",
+  "accuracy": 0.8507,
+  "macro_f1": 0.8488,
+  "test_used_as_validation": true,
+  "per_class": [
+    {
+      "class": "airplane",
+      "precision": 0.8772,
+      "recall": 0.879,
+      "f1": 0.8781,
+      "support": 1000
+    },
+    {
+      "class": "automobile",
+      "precision": 0.9049,
+      "recall": 0.942,
+      "f1": 0.9231,
+      "support": 1000
+    },
+    {
+      "class": "bird",
+      "precision": 0.8378,
+      "recall": 0.775,
+      "f1": 0.8052,
+      "support": 1000
+    },
+    {
+      "class": "cat",
+      "precision": 0.7713,
+      "recall": 0.644,
+      "f1": 0.7019,
+      "support": 1000
+    },
+    {
+      "class": "deer",
+      "precision": 0.8579,
+      "recall": 0.809,
+      "f1": 0.8327,
+      "support": 1000
+    },
+    {
+      "class": "dog",
+      "precision": 0.8069,
+      "recall": 0.769,
+      "f1": 0.7875,
+      "support": 1000
+    },
+    {
+      "class": "frog",
+      "precision": 0.7749,
+      "recall": 0.95,
+      "f1": 0.8535,
+      "support": 1000
+    },
+    {
+      "class": "horse",
+      "precision": 0.8851,
+      "recall": 0.901,
+      "f1": 0.893,
+      "support": 1000
+    },
+    {
+      "class": "ship",
+      "precision": 0.9164,
+      "recall": 0.921,
+      "f1": 0.9187,
+      "support": 1000
+    },
+    {
+      "class": "truck",
+      "precision": 0.8717,
+      "recall": 0.917,
+      "f1": 0.8938,
+      "support": 1000
+    }
+  ]
+}
