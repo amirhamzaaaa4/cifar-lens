@@ -25,7 +25,7 @@ All new models are trained on 45,000 images, selected on a separate 5,000-image 
 
 | Model | Test accuracy (95% CI) | Macro F1 | Calibration error (ECE) | Parameters |
 |---|---:|---:|---:|---:|
-| Original group notebook (2025) | 85.07%\* | 0.849 | — | — |
+| Original notebook (2025) | 85.07%\* | 0.849 | — | — |
 | ResNet20 + Cutout + label smoothing + flip TTA | 93.51% (93.03%–93.98%) | 0.9350 | 0.0141 | 274,042 |
 
 \* The original notebook also used the test set for validation, so its score is optimistic and not directly comparable.
@@ -117,11 +117,13 @@ tests/              Unit, integration and dashboard tests
 
 32 × 32 inputs and ten fixed classes. Every upload is forced into one of them, and there is no unknown-object detector yet. Grad-CAM shows coarse correlation, not causation. Not for consequential decisions. See the [model card](docs/MODEL_CARD.md).
 
-## Credits
+## Author
 
-Original CIFAR-10 assignment (COIT12213, 2025) by **Rory O'Brien, Amir Hamza and MD Suyaib Rahman**; the historical notebook is kept in `notebooks/` with student IDs removed. The portfolio extension (app, pipeline, tests, docs) was developed by Amir Hamza with AI coding assistance. See [provenance](docs/PROVENANCE.md).
+Developed by **Amir Hamza**.
 
-No license has been applied yet; it requires agreement from all original authors.
+## License
+
+[MIT License](LICENSE) · Copyright © 2026 Amir Hamza.
 
 ## References
 

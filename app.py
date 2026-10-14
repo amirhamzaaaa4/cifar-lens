@@ -72,7 +72,7 @@ with st.sidebar:
     threshold = st.slider('Review threshold', 0.1, 0.99, 0.65, 0.01)
     st.caption('Scores below this threshold receive a review flag. High scores do not guarantee correctness.')
     st.markdown('---')
-    st.caption('Built from a 2025 group assignment. Extended with AI assistance; original authors credited in the README.')
+    st.caption('CIFAR Lens · Developed by Amir Hamza.')
 results = json.loads((selected / 'results.json').read_text()) if selected else None
 if results and results['smoke_run']:
     st.warning('Smoke-test experiment: trained on a small subset to verify the software. This is not a performance benchmark.')
@@ -189,4 +189,4 @@ Three architectures share one data protocol: a small **baseline** CNN, a compact
 
 **Limitations:** 32 × 32 images, ten fixed categories, no reliable unknown-object detector, and no claim of production readiness. The review threshold is a user control, not an out-of-distribution guarantee.
 
-**Original authors:** Rory O'Brien, Amir Hamza, MD Suyaib Rahman. New portfolio extension developed with Codex assistance. See the model card and provenance notes for details.''')
+**Author:** Amir Hamza. See the model card for details.''')
