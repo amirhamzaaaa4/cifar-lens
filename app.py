@@ -30,7 +30,7 @@ folders = sorted(p.parent for p in (ROOT / 'artifacts').glob('*/results.json'))
 with st.sidebar:
     st.markdown('### ◉ CIFAR Lens')
     st.caption('Ten classes. One transparent experiment.')
-    selected = st.selectbox('Experiment', folders, format_func=lambda p: p.name) if folders else None
+    selected = st.selectbox('Experiment', folders, format_func=lambda p: p.name, key='experiment') if folders else None
     threshold = st.slider('Review threshold', 0.1, 0.99, 0.65, 0.01)
     st.caption('Scores below this threshold receive a review flag. High scores do not guarantee correctness.')
     st.markdown('---')
@@ -116,19 +116,19 @@ with evaluate:
         st.download_button('Download experiment record', (selected / 'results.json').read_bytes(), 'results.json', 'application/json')
     else:
         st.write('Historical per-class results extracted from your notebook. Fresh evaluation will appear after training.')
-        st.dataframe(historical['per_class'], use_container_width=True)
+        st.dataframe(historical['per_class'], width='stretch')
 with mistakes:
     st.subheader('Start with the confident mistakes')
     st.write('Inspect high-confidence errors to understand where a model can mislead you.')
     if selected:
         data = np.load(selected / 'errors.npz', allow_pickle=False)
-        category = st.selectbox('True class', ['All'] + CLASSES)
+        category = st.selectbox('True class', ['All'] + CLASSES, key='error_class')
         indices = [i for i, t in enumerate(data['truth']) if category == 'All' or CLASSES[int(t)] == category]
         columns = st.columns(4)
         for slot, i in enumerate(indices[:24]):
             columns[slot % 4].image(data['images'][i],
                 caption=f"True: {CLASSES[int(data['truth'][i])]} · Predicted: {CLASSES[int(data['prediction'][i])]} ({data['confidence'][i]:.0%})",
-                use_container_width=True)
+                width='stretch')
         if not indices:
             st.info('No saved errors for this class in the top 48 mistakes.')
     else:
